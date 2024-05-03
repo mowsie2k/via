@@ -1,17 +1,21 @@
-build:
-  commands:
-    - echo Build started on `date`
-    - echo Building the Docker image...
-    - cd backend && docker build -t via .
-post_build:
-  commands:
-    - echo Build completed on `date`
-    - echo Pushing the Docker image...
-    - docker tag via:latest 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest
-    - docker push 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest
-    - printf '[{"name":"via-container","imageUri":"%s"}]' 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest > imagedefinitions.json
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - cd backend && docker build -t via .
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker tag via:latest 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest
+      - docker push 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest
+      - printf '[{"name":"via-container","imageUri":"%s"}]' 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest > imagedefinitions.json
 
 artifacts:
   files:
     - '**/*'
+  discard-paths: yes
 
