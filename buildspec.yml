@@ -1,6 +1,10 @@
 version: 0.2
 
 phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 637423561069.dkr.ecr.us-east-2.amazonaws.com
   build:
     commands:
       - echo Build started on `date`
@@ -12,10 +16,8 @@ phases:
       - echo Pushing the Docker image...
       - docker tag via:latest 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest
       - docker push 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest
-      - printf '[{"name":"via-container","imageUri":"%s"}]' 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest > imagedefinitions.json
 
 artifacts:
-  files:
+  files: 
     - '**/*'
-  discard-paths: yes
 
