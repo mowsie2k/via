@@ -9,7 +9,7 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t via .
+      - docker build -t via via/backend
       - docker tag via:latest 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest
   post_build:
     commands:
