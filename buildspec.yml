@@ -16,4 +16,9 @@ phases:
       - echo Pushing the Docker image...
       - docker tag via:latest 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest
       - docker push 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest
+      # Generate an output artifact containing task definition name and image URI
+      - printf '[{"name":"your.task.definition.container.name","imageUri":"%s"}]' 637423561069.dkr.ecr.us-east-2.amazonaws.com/via:latest > imagedefinitions.json
 
+artifacts:
+  files:
+    - imagedefinitions.json
