@@ -1,8 +1,13 @@
 #!/bin/bash
 set -e
 
-cd /opt/via/deployment/docker_compose
+# Define the full path to the docker-compose directory
+COMPOSE_DIR="/opt/via/deployment/docker_compose"
 
-# Use the full path to Docker Compose
-/usr/local/bin/docker-compose down
-/usr/local/bin/docker-compose -f docker-compose.dev.yml -p danswer-stack up -d --build --force-recreate
+# Change to the directory where docker-compose.dev.yml is located
+cd $COMPOSE_DIR
+
+# Use the full path to Docker Compose and specify the full path to the compose file
+/usr/local/bin/docker-compose -f $COMPOSE_DIR/docker-compose.dev.yml down
+/usr/local/bin/docker-compose -f $COMPOSE_DIR/docker-compose.dev.yml -p danswer-stack up -d --build
+
