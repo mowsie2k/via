@@ -3,6 +3,6 @@ set -e
 
 cd /opt/via/deployment/docker_compose
 
-# Run Docker Compose to start the application
-docker-compose down
-docker-compose -f docker-compose.dev.yml -p danswer-stack up -d --build --force-recreate
+# Use the full path to Docker Compose
+/usr/local/bin/docker-compose down
+/usr/local/bin/docker-compose -f docker-compose.dev.yml -p danswer-stack up -d --build --force-recreate
