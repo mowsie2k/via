@@ -71,10 +71,10 @@ export function Header({ user }: HeaderProps) {
         >
           <div className="flex">
             <div className="h-[32px] w-[30px]">
-              <Image src="/logo.png" alt="Logo" width="1419" height="1520" />
+              <Image src="/vv-logo.png" alt="Logo" width="1419" height="1520" />
             </div>
             <h1 className="flex text-2xl text-strong font-bold my-auto">
-              Danswer
+              VIA
             </h1>
           </div>
         </Link>
