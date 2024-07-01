@@ -52,7 +52,7 @@ export function Header({ user }: HeaderProps) {
                   )}
                 </div>
               ) : (
-                <HeaderTitle>Danswer</HeaderTitle>
+                <HeaderTitle>VIA</HeaderTitle>
               )}
             </div>
           </div>
