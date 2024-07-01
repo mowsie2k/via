@@ -94,7 +94,7 @@ export const ChatSidebar = ({
                   )}
                 </div>
               ) : (
-                <HeaderTitle>Danswer</HeaderTitle>
+                <HeaderTitle>VIA</HeaderTitle>
               )}
             </div>
           </Link>
