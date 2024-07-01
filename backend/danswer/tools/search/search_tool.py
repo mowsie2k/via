@@ -7,15 +7,17 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from danswer.chat.chat_utils import llm_doc_from_inference_section
+from danswer.chat.models import DanswerContext
+from danswer.chat.models import DanswerContexts
 from danswer.chat.models import LlmDoc
 from danswer.db.models import Persona
 from danswer.db.models import User
+from danswer.dynamic_configs.interface import JSON_ro
 from danswer.llm.answering.doc_pruning import prune_documents
 from danswer.llm.answering.models import DocumentPruningConfig
 from danswer.llm.answering.models import PreviousMessage
 from danswer.llm.answering.models import PromptConfig
 from danswer.llm.interfaces import LLM
-from danswer.llm.interfaces import LLMConfig
 from danswer.search.enums import QueryFlow
 from danswer.search.enums import SearchType
 from danswer.search.models import IndexFilters
@@ -30,6 +32,7 @@ from danswer.tools.tool import Tool
 from danswer.tools.tool import ToolResponse
 
 SEARCH_RESPONSE_SUMMARY_ID = "search_response_summary"
+SEARCH_DOC_CONTENT_ID = "search_doc_content"
 SECTION_RELEVANCE_LIST_ID = "section_relevance_list"
 FINAL_CONTEXT_DOCUMENTS = "final_context_documents"
 
@@ -56,6 +59,8 @@ HINT: if you are unfamiliar with the user input OR think the user input is a typ
 
 
 class SearchTool(Tool):
+    NAME = "run_search"
+
     def __init__(
         self,
         db_session: Session,
@@ -63,7 +68,8 @@ class SearchTool(Tool):
         persona: Persona,
         retrieval_options: RetrievalDetails | None,
         prompt_config: PromptConfig,
-        llm_config: LLMConfig,
+        llm: LLM,
+        fast_llm: LLM,
         pruning_config: DocumentPruningConfig,
         # if specified, will not actually run a search and will instead return these
         # sections. Used when the user selects specific docs to talk to
@@ -71,12 +77,14 @@ class SearchTool(Tool):
         chunks_above: int = 0,
         chunks_below: int = 0,
         full_doc: bool = False,
+        bypass_acl: bool = False,
     ) -> None:
         self.user = user
         self.persona = persona
         self.retrieval_options = retrieval_options
         self.prompt_config = prompt_config
-        self.llm_config = llm_config
+        self.llm = llm
+        self.fast_llm = fast_llm
         self.pruning_config = pruning_config
 
         self.selected_docs = selected_docs
@@ -84,20 +92,19 @@ class SearchTool(Tool):
         self.chunks_above = chunks_above
         self.chunks_below = chunks_below
         self.full_doc = full_doc
+        self.bypass_acl = bypass_acl
         self.db_session = db_session
 
-    @classmethod
-    def name(cls) -> str:
-        return "run_search"
+    def name(self) -> str:
+        return self.NAME
 
     """For explicit tool calling"""
 
-    @classmethod
-    def tool_definition(cls) -> dict:
+    def tool_definition(self) -> dict:
         return {
             "type": "function",
             "function": {
-                "name": cls.name(),
+                "name": self.name(),
                 "description": search_tool_description,
                 "parameters": {
                     "type": "object",
@@ -115,7 +122,9 @@ class SearchTool(Tool):
     def build_tool_message_content(
         self, *args: ToolResponse
     ) -> str | list[str | dict[str, Any]]:
-        final_context_docs_response = args[2]
+        final_context_docs_response = next(
+            response for response in args if response.id == FINAL_CONTEXT_DOCUMENTS
+        )
         final_context_docs = cast(list[LlmDoc], final_context_docs_response.response)
 
         return json.dumps(
@@ -175,7 +184,7 @@ class SearchTool(Tool):
                 docs=self.selected_docs,
                 doc_relevance_list=None,
                 prompt_config=self.prompt_config,
-                llm_config=self.llm_config,
+                llm_config=self.llm.config,
                 question=query,
                 document_pruning_config=self.pruning_config,
             ),
@@ -191,9 +200,9 @@ class SearchTool(Tool):
         search_pipeline = SearchPipeline(
             search_request=SearchRequest(
                 query=query,
-                human_selected_filters=self.retrieval_options.filters
-                if self.retrieval_options
-                else None,
+                human_selected_filters=(
+                    self.retrieval_options.filters if self.retrieval_options else None
+                ),
                 persona=self.persona,
                 offset=self.retrieval_options.offset
                 if self.retrieval_options
@@ -204,6 +213,9 @@ class SearchTool(Tool):
                 full_doc=self.full_doc,
             ),
             user=self.user,
+            llm=self.llm,
+            fast_llm=self.fast_llm,
+            bypass_acl=self.bypass_acl,
             db_session=self.db_session,
         )
         yield ToolResponse(
@@ -215,6 +227,20 @@ class SearchTool(Tool):
                 predicted_search=search_pipeline.predicted_search_type,
                 final_filters=search_pipeline.search_query.filters,
                 recency_bias_multiplier=search_pipeline.search_query.recency_bias_multiplier,
+            ),
+        )
+        yield ToolResponse(
+            id=SEARCH_DOC_CONTENT_ID,
+            response=DanswerContexts(
+                contexts=[
+                    DanswerContext(
+                        content=section.content,
+                        document_id=section.document_id,
+                        semantic_identifier=section.semantic_identifier,
+                        blurb=section.blurb,
+                    )
+                    for section in search_pipeline.reranked_sections
+                ]
             ),
         )
         yield ToolResponse(
@@ -233,8 +259,18 @@ class SearchTool(Tool):
                 for ind in range(len(llm_docs))
             ],
             prompt_config=self.prompt_config,
-            llm_config=self.llm_config,
+            llm_config=self.llm.config,
             question=query,
             document_pruning_config=self.pruning_config,
         )
         yield ToolResponse(id=FINAL_CONTEXT_DOCUMENTS, response=final_context_documents)
+
+    def final_result(self, *args: ToolResponse) -> JSON_ro:
+        final_docs = cast(
+            list[LlmDoc],
+            next(arg.response for arg in args if arg.id == FINAL_CONTEXT_DOCUMENTS),
+        )
+        # NOTE: need to do this json.loads(doc.json()) stuff because there are some
+        # subfields that are not serializable by default (datetime)
+        # this forces pydantic to make them JSON serializable for us
+        return [json.loads(doc.json()) for doc in final_docs]

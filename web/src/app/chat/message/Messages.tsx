@@ -9,6 +9,7 @@ import {
   FiEdit2,
   FiChevronRight,
   FiChevronLeft,
+  FiTool,
 } from "react-icons/fi";
 import { FeedbackType } from "../types";
 import { useEffect, useRef, useState } from "react";
@@ -20,9 +21,12 @@ import { ThreeDots } from "react-loader-spinner";
 import { SkippedSearch } from "./SkippedSearch";
 import remarkGfm from "remark-gfm";
 import { CopyButton } from "@/components/CopyButton";
-import { ChatFileType, FileDescriptor } from "../interfaces";
-import { IMAGE_GENERATION_TOOL_NAME } from "../tools/constants";
-import { ToolRunningAnimation } from "../tools/ToolRunningAnimation";
+import { ChatFileType, FileDescriptor, ToolCallMetadata } from "../interfaces";
+import {
+  IMAGE_GENERATION_TOOL_NAME,
+  SEARCH_TOOL_NAME,
+} from "../tools/constants";
+import { ToolRunDisplay } from "../tools/ToolRunningAnimation";
 import { Hoverable } from "@/components/Hoverable";
 import { DocumentPreview } from "../files/documents/DocumentPreview";
 import { InMessageImage } from "../files/images/InMessageImage";
@@ -34,6 +38,14 @@ import Prism from "prismjs";
 
 import "prismjs/themes/prism-tomorrow.css";
 import "./custom-code-styles.css";
+import { Persona } from "@/app/admin/assistants/interfaces";
+import { Button } from "@tremor/react";
+import { AssistantIcon } from "@/components/assistants/AssistantIcon";
+
+const TOOLS_WITH_CUSTOM_HANDLING = [
+  SEARCH_TOOL_NAME,
+  IMAGE_GENERATION_TOOL_NAME,
+];
 
 function FileDisplay({ files }: { files: FileDescriptor[] }) {
   const imageFiles = files.filter((file) => file.type === ChatFileType.IMAGE);
@@ -71,13 +83,14 @@ function FileDisplay({ files }: { files: FileDescriptor[] }) {
 }
 
 export const AIMessage = ({
+  alternativeAssistant,
   messageId,
   content,
   files,
   query,
   personaName,
   citedDocuments,
-  currentTool,
+  toolCall,
   isComplete,
   hasDocs,
   handleFeedback,
@@ -86,14 +99,17 @@ export const AIMessage = ({
   handleSearchQueryEdit,
   handleForceSearch,
   retrievalDisabled,
+  currentPersona,
 }: {
+  alternativeAssistant?: Persona | null;
+  currentPersona: Persona;
   messageId: number | null;
   content: string | JSX.Element;
   files?: FileDescriptor[];
   query?: string;
   personaName?: string;
   citedDocuments?: [string, DanswerDocument][] | null;
-  currentTool?: string | null;
+  toolCall?: ToolCallMetadata;
   isComplete?: boolean;
   hasDocs?: boolean;
   handleFeedback?: (feedbackType: FeedbackType) => void;
@@ -113,7 +129,6 @@ export const AIMessage = ({
   if (!isReady) {
     return <div />;
   }
-  console.log(content);
 
   if (!isComplete) {
     const trimIncompleteCodeSection = (
@@ -134,42 +149,37 @@ export const AIMessage = ({
     content = trimIncompleteCodeSection(content);
   }
 
-  const loader =
-    currentTool === IMAGE_GENERATION_TOOL_NAME ? (
-      <div className="text-sm my-auto">
-        <ToolRunningAnimation
-          toolName="Generating images"
-          toolLogo={<FiImage size={16} className="my-auto mr-1" />}
-        />
-      </div>
-    ) : (
-      <div className="text-sm my-auto">
-        <ThreeDots
-          height="30"
-          width="50"
-          color="#3b82f6"
-          ariaLabel="grid-loading"
-          radius="12.5"
-          wrapperStyle={{}}
-          wrapperClass=""
-          visible={true}
-        />
-      </div>
-    );
+  const shouldShowLoader =
+    !toolCall || (toolCall.tool_name === SEARCH_TOOL_NAME && !content);
+  const defaultLoader = shouldShowLoader ? (
+    <div className="text-sm my-auto">
+      <ThreeDots
+        height="30"
+        width="50"
+        color="#3b82f6"
+        ariaLabel="grid-loading"
+        radius="12.5"
+        wrapperStyle={{}}
+        wrapperClass=""
+        visible={true}
+      />
+    </div>
+  ) : undefined;
 
   return (
     <div className={"py-5 px-5 flex -mr-6 w-full"}>
       <div className="mx-auto w-searchbar-xs 2xl:w-searchbar-sm 3xl:w-searchbar relative">
         <div className="ml-8">
           <div className="flex">
-            <div className="p-1 bg-ai rounded-lg h-fit my-auto">
-              <div className="text-inverted">
-                <FiCpu size={16} className="my-auto mx-auto" />
-              </div>
-            </div>
+            <AssistantIcon
+              size="small"
+              assistant={alternativeAssistant || currentPersona}
+            />
 
             <div className="font-bold text-emphasis ml-2 my-auto">
-              {personaName || "Danswer"}
+              {alternativeAssistant
+                ? alternativeAssistant.name
+                : personaName || "Danswer"}
             </div>
 
             {query === undefined &&
@@ -190,28 +200,61 @@ export const AIMessage = ({
           </div>
 
           <div className="w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-1 ml-8">
-            {query !== undefined &&
-              handleShowRetrieved !== undefined &&
-              isCurrentlyShowingRetrieved !== undefined &&
-              !retrievalDisabled && (
-                <div className="my-1">
-                  <SearchSummary
-                    query={query}
-                    hasDocs={hasDocs || false}
-                    messageId={messageId}
-                    isCurrentlyShowingRetrieved={isCurrentlyShowingRetrieved}
-                    handleShowRetrieved={handleShowRetrieved}
-                    handleSearchQueryEdit={handleSearchQueryEdit}
+            {(!toolCall || toolCall.tool_name === SEARCH_TOOL_NAME) && (
+              <>
+                {query !== undefined &&
+                  handleShowRetrieved !== undefined &&
+                  isCurrentlyShowingRetrieved !== undefined &&
+                  !retrievalDisabled && (
+                    <div className="my-1">
+                      <SearchSummary
+                        query={query}
+                        hasDocs={hasDocs || false}
+                        messageId={messageId}
+                        isCurrentlyShowingRetrieved={
+                          isCurrentlyShowingRetrieved
+                        }
+                        handleShowRetrieved={handleShowRetrieved}
+                        handleSearchQueryEdit={handleSearchQueryEdit}
+                      />
+                    </div>
+                  )}
+                {handleForceSearch &&
+                  content &&
+                  query === undefined &&
+                  !hasDocs &&
+                  !retrievalDisabled && (
+                    <div className="my-1">
+                      <SkippedSearch handleForceSearch={handleForceSearch} />
+                    </div>
+                  )}
+              </>
+            )}
+
+            {toolCall &&
+              !TOOLS_WITH_CUSTOM_HANDLING.includes(toolCall.tool_name) && (
+                <div className="my-2">
+                  <ToolRunDisplay
+                    toolName={
+                      toolCall.tool_result && content
+                        ? `Used "${toolCall.tool_name}"`
+                        : `Using "${toolCall.tool_name}"`
+                    }
+                    toolLogo={<FiTool size={15} className="my-auto mr-1" />}
+                    isRunning={!toolCall.tool_result || !content}
                   />
                 </div>
               )}
-            {handleForceSearch &&
-              content &&
-              query === undefined &&
-              !hasDocs &&
-              !retrievalDisabled && (
-                <div className="my-1">
-                  <SkippedSearch handleForceSearch={handleForceSearch} />
+
+            {toolCall &&
+              toolCall.tool_name === IMAGE_GENERATION_TOOL_NAME &&
+              !toolCall.tool_result && (
+                <div className="my-2">
+                  <ToolRunDisplay
+                    toolName={`Generating images`}
+                    toolLogo={<FiImage size={15} className="my-auto mr-1" />}
+                    isRunning={!toolCall.tool_result}
+                  />
                 </div>
               )}
 
@@ -250,6 +293,9 @@ export const AIMessage = ({
                       code: (props) => (
                         <CodeBlock {...props} content={content as string} />
                       ),
+                      p: ({ node, ...props }) => (
+                        <p {...props} className="text-default" />
+                      ),
                     }}
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[[rehypePrism, { ignoreMissing: true }]]}
@@ -261,7 +307,7 @@ export const AIMessage = ({
                 )}
               </>
             ) : isComplete ? null : (
-              loader
+              defaultLoader
             )}
             {citedDocuments && citedDocuments.length > 0 && (
               <div className="mt-2">
@@ -458,6 +504,7 @@ export const HumanMessage = ({
                       placeholder-gray-400 
                       resize-none
                       pl-4
+                      overflow-y-auto
                       pr-12 
                       py-4`}
                       aria-multiline
@@ -466,7 +513,6 @@ export const HumanMessage = ({
                       style={{ scrollbarWidth: "thin" }}
                       onChange={(e) => {
                         setEditedContent(e.target.value);
-                        e.target.style.height = "auto";
                         e.target.style.height = `${e.target.scrollHeight}px`;
                       }}
                       onKeyDown={(e) => {
@@ -475,13 +521,11 @@ export const HumanMessage = ({
                           setEditedContent(content);
                           setIsEditing(false);
                         }
+                        // Submit edit if "Command Enter" is pressed, like in ChatGPT
+                        if (e.key === "Enter" && e.metaKey) {
+                          handleEditSubmit();
+                        }
                       }}
-                      // ref={(textarea) => {
-                      //   if (textarea) {
-                      //     textarea.selectionStart = textarea.selectionEnd =
-                      //       textarea.value.length;
-                      //   }
-                      // }}
                     />
                     <div className="flex justify-end mt-2 gap-2 pr-4">
                       <button
@@ -519,22 +563,9 @@ export const HumanMessage = ({
                   </div>
                 </div>
               ) : typeof content === "string" ? (
-                <ReactMarkdown
-                  className="prose max-w-full"
-                  components={{
-                    a: ({ node, ...props }) => (
-                      <a
-                        {...props}
-                        className="text-blue-500 hover:text-blue-700"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      />
-                    ),
-                  }}
-                  remarkPlugins={[remarkGfm]}
-                >
+                <div className="flex flex-col preserve-lines prose max-w-full">
                   {content}
-                </ReactMarkdown>
+                </div>
               ) : (
                 content
               )}

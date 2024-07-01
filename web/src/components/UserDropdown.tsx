@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useContext } from "react";
 import { FiSearch, FiMessageSquare, FiTool, FiLogOut } from "react-icons/fi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,9 @@ import { checkUserIsNoAuthUser, logout } from "@/lib/user";
 import { BasicSelectable } from "@/components/BasicClickable";
 import { Popover } from "./popover/Popover";
 import { FaBrain } from "react-icons/fa";
+import { LOGOUT_DISABLED } from "@/lib/constants";
+import { Settings } from "@/app/admin/settings/interfaces";
+import { SettingsContext } from "./settings/SettingsProvider";
 
 export function UserDropdown({
   user,
@@ -21,6 +24,12 @@ export function UserDropdown({
   const userInfoRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  const combinedSettings = useContext(SettingsContext);
+  if (!combinedSettings) {
+    return null;
+  }
+  const settings = combinedSettings.settings;
+
   const handleLogout = () => {
     logout().then((isSuccess) => {
       if (!isSuccess) {
@@ -31,7 +40,8 @@ export function UserDropdown({
   };
 
   const showAdminPanel = !user || user.role === "admin";
-  const showLogout = user && !checkUserIsNoAuthUser(user.id);
+  const showLogout =
+    user && !checkUserIsNoAuthUser(user.id) && !LOGOUT_DISABLED;
 
   return (
     <div className="relative" ref={userInfoRef}>
@@ -39,12 +49,12 @@ export function UserDropdown({
         open={userInfoVisible}
         onOpenChange={setUserInfoVisible}
         content={
-          <BasicSelectable selected={false}>
+          <BasicSelectable padding={false} selected={false}>
             <div
               onClick={() => setUserInfoVisible(!userInfoVisible)}
               className="flex cursor-pointer"
             >
-              <div className="my-auto bg-user rounded-lg px-2 text-base font-normal">
+              <div className="my-auto bg-user hover:bg-user-hover rounded-lg px-2 text-base font-normal">
                 {user && user.email ? user.email[0].toUpperCase() : "A"}
               </div>
             </div>
@@ -71,27 +81,33 @@ export function UserDropdown({
           >
             {!hideChatAndSearch && (
               <>
-                <Link
-                  href="/search"
-                  className="flex py-3 px-4 rounded cursor-pointer hover:bg-hover-light"
-                >
-                  <FiSearch className="my-auto mr-2 text-lg" />
-                  Danswer Search
-                </Link>
-                <Link
-                  href="/chat"
-                  className="flex py-3 px-4 rounded cursor-pointer hover:bg-hover-light"
-                >
-                  <FiMessageSquare className="my-auto mr-2 text-lg" />
-                  Danswer Chat
-                </Link>
-                <Link
-                  href="/assistants/mine"
-                  className="flex py-3 px-4 rounded cursor-pointer hover:bg-hover-light"
-                >
-                  <FaBrain className="my-auto mr-2 text-lg" />
-                  My Assistants
-                </Link>
+                {settings.search_page_enabled && (
+                  <Link
+                    href="/search"
+                    className="flex py-3 px-4 rounded cursor-pointer hover:bg-hover-light"
+                  >
+                    <FiSearch className="my-auto mr-2 text-lg" />
+                    Danswer Search
+                  </Link>
+                )}
+                {settings.chat_page_enabled && (
+                  <>
+                    <Link
+                      href="/chat"
+                      className="flex py-3 px-4 rounded cursor-pointer hover:bg-hover-light"
+                    >
+                      <FiMessageSquare className="my-auto mr-2 text-lg" />
+                      Danswer Chat
+                    </Link>
+                    <Link
+                      href="/assistants/mine"
+                      className="flex py-3 px-4 rounded cursor-pointer hover:bg-hover-light"
+                    >
+                      <FaBrain className="my-auto mr-2 text-lg" />
+                      My Assistants
+                    </Link>
+                  </>
+                )}
               </>
             )}
             {showAdminPanel && (

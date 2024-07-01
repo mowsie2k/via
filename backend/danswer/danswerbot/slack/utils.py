@@ -29,7 +29,12 @@ from danswer.danswerbot.slack.constants import SLACK_CHANNEL_ID
 from danswer.danswerbot.slack.tokens import fetch_tokens
 from danswer.db.engine import get_sqlalchemy_engine
 from danswer.db.users import get_user_by_email
+from danswer.llm.exceptions import GenAIDisabledException
+from danswer.llm.factory import get_default_llms
+from danswer.llm.utils import dict_based_prompt_to_langchain_prompt
+from danswer.llm.utils import message_to_string
 from danswer.one_shot_answer.models import ThreadMessage
+from danswer.prompts.miscellaneous_prompts import SLACK_LANGUAGE_REPHRASE_PROMPT
 from danswer.utils.logger import setup_logger
 from danswer.utils.telemetry import optional_telemetry
 from danswer.utils.telemetry import RecordType
@@ -39,6 +44,30 @@ logger = setup_logger()
 
 
 DANSWER_BOT_APP_ID: str | None = None
+
+
+def rephrase_slack_message(msg: str) -> str:
+    def _get_rephrase_message() -> list[dict[str, str]]:
+        messages = [
+            {
+                "role": "user",
+                "content": SLACK_LANGUAGE_REPHRASE_PROMPT.format(query=msg),
+            },
+        ]
+
+        return messages
+
+    try:
+        llm, _ = get_default_llms(timeout=5)
+    except GenAIDisabledException:
+        logger.warning("Unable to rephrase Slack user message, Gen AI disabled")
+        return msg
+    messages = _get_rephrase_message()
+    filled_llm_prompt = dict_based_prompt_to_langchain_prompt(messages)
+    model_output = message_to_string(llm.invoke(filled_llm_prompt))
+    logger.debug(model_output)
+
+    return model_output
 
 
 def update_emote_react(
@@ -275,6 +304,31 @@ def fetch_userids_from_emails(
         except Exception:
             logger.error(f"Was not able to find slack user by email: {email}")
             failed_to_find.append(email)
+
+    return user_ids, failed_to_find
+
+
+def fetch_userids_from_groups(
+    group_names: list[str], client: WebClient
+) -> tuple[list[str], list[str]]:
+    user_ids: list[str] = []
+    failed_to_find: list[str] = []
+    for group_name in group_names:
+        try:
+            # First, find the group ID from the group name
+            response = client.usergroups_list()
+            groups = {group["name"]: group["id"] for group in response["usergroups"]}
+            group_id = groups.get(group_name)
+
+            if group_id:
+                # Fetch user IDs for the group
+                response = client.usergroups_users_list(usergroup=group_id)
+                user_ids.extend(response["users"])
+            else:
+                failed_to_find.append(group_name)
+        except Exception as e:
+            logger.error(f"Error fetching user IDs for group {group_name}: {str(e)}")
+            failed_to_find.append(group_name)
 
     return user_ids, failed_to_find
 

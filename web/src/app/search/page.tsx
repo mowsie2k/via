@@ -23,6 +23,7 @@ import { personaComparator } from "../admin/assistants/lib";
 import { FullEmbeddingModelResponse } from "../admin/models/embedding/embeddingModels";
 import { NoSourcesModal } from "@/components/initialSetup/search/NoSourcesModal";
 import { NoCompleteSourcesModal } from "@/components/initialSetup/search/NoCompleteSourceModal";
+import { ChatPopup } from "../chat/ChatPopup";
 
 export default async function Home() {
   // Disable caching so we always get the up to date connector / document set / persona info
@@ -89,6 +90,7 @@ export default async function Home() {
   }
 
   let personas: Persona[] = [];
+
   if (personaResponse?.ok) {
     personas = await personaResponse.json();
   } else {
@@ -132,8 +134,12 @@ export default async function Home() {
     !hasCompletedWelcomeFlowSS() &&
     !hasAnyConnectors &&
     (!user || user.role === "admin");
+
   const shouldDisplayNoSourcesModal =
-    ccPairs.length === 0 && !shouldShowWelcomeModal;
+    (!user || user.role === "admin") &&
+    ccPairs.length === 0 &&
+    !shouldShowWelcomeModal;
+
   const shouldDisplaySourcesIncompleteModal =
     !ccPairs.some(
       (ccPair) => ccPair.has_successful_run && ccPair.docs_indexed > 0
@@ -148,13 +154,20 @@ export default async function Home() {
         <HealthCheckBanner />
       </div>
       {shouldShowWelcomeModal && <WelcomeModal user={user} />}
+
       {!shouldShowWelcomeModal &&
         !shouldDisplayNoSourcesModal &&
         !shouldDisplaySourcesIncompleteModal && <ApiKeyModal user={user} />}
+
       {shouldDisplayNoSourcesModal && <NoSourcesModal />}
+
       {shouldDisplaySourcesIncompleteModal && (
         <NoCompleteSourcesModal ccPairs={ccPairs} />
       )}
+
+      {/* ChatPopup is a custom popup that displays a admin-specified message on initial user visit. 
+      Only used in the EE version of the app. */}
+      <ChatPopup />
 
       <InstantSSRAutoRefresh />
 

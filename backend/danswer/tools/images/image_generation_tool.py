@@ -8,7 +8,9 @@ from pydantic import BaseModel
 
 from danswer.chat.chat_utils import combine_message_chain
 from danswer.configs.model_configs import GEN_AI_HISTORY_CUTOFF
+from danswer.dynamic_configs.interface import JSON_ro
 from danswer.llm.answering.models import PreviousMessage
+from danswer.llm.headers import build_llm_extra_headers
 from danswer.llm.interfaces import LLM
 from danswer.llm.utils import build_content_with_imgs
 from danswer.llm.utils import message_to_string
@@ -53,23 +55,29 @@ class ImageGenerationResponse(BaseModel):
 
 
 class ImageGenerationTool(Tool):
+    NAME = "run_image_generation"
+
     def __init__(
-        self, api_key: str, model: str = "dall-e-3", num_imgs: int = 2
+        self,
+        api_key: str,
+        model: str = "dall-e-3",
+        num_imgs: int = 2,
+        additional_headers: dict[str, str] | None = None,
     ) -> None:
         self.api_key = api_key
         self.model = model
         self.num_imgs = num_imgs
 
-    @classmethod
-    def name(self) -> str:
-        return "run_image_generation"
+        self.additional_headers = additional_headers
 
-    @classmethod
-    def tool_definition(cls) -> dict:
+    def name(self) -> str:
+        return self.NAME
+
+    def tool_definition(self) -> dict:
         return {
             "type": "function",
             "function": {
-                "name": cls.name(),
+                "name": self.name(),
                 "description": "Generate an image from a prompt",
                 "parameters": {
                     "type": "object",
@@ -141,6 +149,7 @@ class ImageGenerationTool(Tool):
             model=self.model,
             api_key=self.api_key,
             n=1,
+            extra_headers=build_llm_extra_headers(self.additional_headers),
         )
         return ImageGenerationResponse(
             revised_prompt=response.data[0]["revised_prompt"],
@@ -162,3 +171,12 @@ class ImageGenerationTool(Tool):
             id=IMAGE_GENERATION_RESPONSE_ID,
             response=results,
         )
+
+    def final_result(self, *args: ToolResponse) -> JSON_ro:
+        image_generation_responses = cast(
+            list[ImageGenerationResponse], args[0].response
+        )
+        return [
+            image_generation_response.dict()
+            for image_generation_response in image_generation_responses
+        ]
