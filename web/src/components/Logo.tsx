@@ -25,7 +25,7 @@ export function Logo({
   ) {
     return (
       <div style={{ height, width }} className={className}>
-        <Image src="/logo.png" alt="Logo" width={width} height={height} />
+        <Image src="/vv-logo.png" alt="Logo" width={width} height={height} />
       </div>
     );
   }
