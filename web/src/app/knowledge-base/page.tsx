@@ -2,8 +2,15 @@ import React from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
+interface FormValues {
+  title: string;
+  description: string;
+  author: string;
+  category: string;
+}
+
 const KnowledgeBaseForm = () => {
-  const initialValues = {
+  const initialValues: FormValues = {
     title: "",
     description: "",
     author: "",
@@ -17,10 +24,12 @@ const KnowledgeBaseForm = () => {
     category: Yup.string().required("Required"),
   });
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (
+    values: FormValues,
+    { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }
+  ) => {
     try {
       // Add your logic to create a Google Sheets document and upload it to Google Drive
-      // For example, you can use Google Sheets API and Google Drive API here
       console.log("Form values:", values);
       // Reset form after submission
       setSubmitting(false);
