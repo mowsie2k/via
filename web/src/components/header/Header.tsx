@@ -81,6 +81,15 @@ export function Header({ user }: HeaderProps) {
                 </div>
               </div>
             </Link>
+ 
+            <Link href="/knowledge-base" className="h-full flex flex-col hover:bg-hover">
+              <div className="w-24 flex my-auto">
+                <div className="mx-auto flex text-strong px-2">
+                  <FiMessageSquare className="my-auto mr-1" />
+                  <h1 className="flex text-sm font-bold my-auto">Knowledge Base</h1>
+                </div>
+              </div>
+            </Link>
           </>
         )}
 
