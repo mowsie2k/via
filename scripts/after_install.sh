@@ -7,7 +7,7 @@ touch .env
 touch .env.nginx
 
 cat <<EOT > .env
-WEB_DOMAIN=ec2-03-135-194-173.us-east-2.compute.amazonaws.com
+WEB_DOMAIN=via.vicivisionamerica.com
 VALID_EMAIL_DOMAINS=vicivisionamerica.com
 AUTH_TYPE=basic
 # Uncomment the following lines if you need email verification
@@ -26,6 +26,6 @@ POSTGRES_PASSWORD=password
 EOT
 
 cat <<EOT > .env.nginx
-DOMAIN=ec2-3-135-194-173.us-east-2.compute.amazonaws.com
+DOMAIN=via.vicivisionamerica.com
 EOT
 
