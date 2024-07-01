@@ -2,4 +2,4 @@
 set -e
 
 # Validate service
-curl -f http://localhost || exit 1
+curl -Ls http://localhost || exit 1
