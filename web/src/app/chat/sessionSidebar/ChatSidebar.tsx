@@ -96,7 +96,6 @@ export const ChatSidebar = ({
               ) : (
                 <HeaderTitle>Danswer</HeaderTitle>
               )}
->>>>>>> upstream/main
             </div>
           </Link>
         </div>
