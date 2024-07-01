@@ -55,7 +55,6 @@ export function Header({ user }: HeaderProps) {
                 <HeaderTitle>Danswer</HeaderTitle>
               )}
             </div>
->>>>>>> upstream/main
           </div>
         </Link>
 
