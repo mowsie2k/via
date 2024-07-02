@@ -65,7 +65,7 @@ export function Header({ user }: HeaderProps) {
               href="/search"
               className={"ml-6 h-full flex flex-col hover:bg-hover"}
             >
-              <div className="w-24 flex my-auto">
+              <div className="w-32 flex my-auto">
                 <div className={"mx-auto flex text-strong px-2"}>
                   <FiSearch className="my-auto mr-1" />
                   <h1 className="flex text-sm font-bold my-auto">Search for Documents</h1>
@@ -74,7 +74,7 @@ export function Header({ user }: HeaderProps) {
             </Link>
 
             <Link href="/chat" className="h-full flex flex-col hover:bg-hover">
-              <div className="w-24 flex my-auto">
+              <div className="w-32 flex my-auto">
                 <div className="mx-auto flex text-strong px-2">
                   <FiMessageSquare className="my-auto mr-1" />
                   <h1 className="flex text-sm font-bold my-auto">Chat with VIA</h1>
@@ -83,7 +83,7 @@ export function Header({ user }: HeaderProps) {
             </Link>
  
             <Link href="/knowledge-base" className="h-full flex flex-col hover:bg-hover">
-              <div className="w-24 flex my-auto">
+              <div className="w-32 flex my-auto">
                 <div className="mx-auto flex text-strong px-2">
                   <FiMessageSquare className="my-auto mr-1" />
                   <h1 className="flex text-sm font-bold my-auto">Knowledge Base</h1>
