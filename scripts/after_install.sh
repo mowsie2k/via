@@ -7,7 +7,7 @@ touch .env
 touch .env.nginx
 
 cat <<EOT > .env
-WEB_DOMAIN=via.vicivisionamerica.com
+WEB_DOMAIN=https://via.vicivisionamerica.com
 VALID_EMAIL_DOMAINS=vicivisionamerica.com
 AUTH_TYPE=basic
 # Uncomment the following lines if you need email verification
