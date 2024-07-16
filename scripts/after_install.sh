@@ -54,7 +54,7 @@ WEB_DOMAIN=https://via.vicivisionamerica.com
 VALID_EMAIL_DOMAINS=
 AUTH_TYPE=basic
 # Uncomment the following lines if you need email verification
-REQUIRE_EMAIL_VERIFICATION=true
+REQUIRE_EMAIL_VERIFICATION=false
 SMTP_USER=forms@vicivisionamerica.com
 SMTP_PASS=$SMTP_PASS
 # Uncomment the following lines if using Google OAuth
