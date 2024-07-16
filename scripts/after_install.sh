@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-
 # Set PYTHONPATH
 #export PYTHONPATHY=/opt/via/backend
 
@@ -39,7 +38,7 @@ set -e
 set -e
 
 # Set PYTHONPATH
-export PYTHONPATH=/opt/via/backend
+#export PYTHONPATH=/opt/via/backend
 
 # Log the start of the script
 echo "Starting after_install.sh script" | tee -a /tmp/after_install.log
