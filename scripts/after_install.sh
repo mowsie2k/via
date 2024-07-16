@@ -56,7 +56,7 @@ AUTH_TYPE=basic
 # Uncomment the following lines if you need email verification
 REQUIRE_EMAIL_VERIFICATION=true
 SMTP_USER=forms@vicivisionamerica.com
-SMTP_PASS=QN5h96PCa*<a7bP%
+SMTP_PASS=$SMTP_PASS
 # Uncomment the following lines if using Google OAuth
 # AUTH_TYPE=google_oauth
 # GOOGLE_OAUTH_CLIENT_ID=809005354337-61c4mse4l4r75m9u6ukeh7rogm008sr0.apps.googleusercontent.com
