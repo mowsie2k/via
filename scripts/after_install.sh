@@ -76,8 +76,8 @@ EOT
 env | tee -a /tmp/after_install.log
 
 # Load the saved state
-echo "Loading saved state" | tee -a /tmp/after_install.log
-python3 /opt/via/backend/scripts/save_load_state.py --load --postgres_container_name relational_db --checkpoint_dir /opt/via/checkpoints 2>&1 | tee -a /tmp/after_install.log
+#echo "Loading saved state" | tee -a /tmp/after_install.log
+#python3 /opt/via/backend/scripts/save_load_state.py --load --postgres_container_name relational_db --checkpoint_dir /opt/via/checkpoints 2>&1 | tee -a /tmp/after_install.log
 
 # Log the end of the script
 echo "Completed after_install.sh script" | tee -a /tmp/after_install.log

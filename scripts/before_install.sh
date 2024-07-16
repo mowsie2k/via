@@ -26,8 +26,8 @@ set -e
 echo "Starting before_install.sh script" | tee -a /tmp/before_install.log
 
 # Save the current state
-echo "Saving current state" | tee -a /tmp/before_install.log
-python3 /opt/via/backend/scripts/save_load_state.py --save --postgres_container_name relational_db --checkpoint_dir /opt/via/checkpoints 2>&1 | tee -a /tmp/before_install.log
+#echo "Saving current state" | tee -a /tmp/before_install.log
+#python3 /opt/via/backend/scripts/save_load_state.py --save --postgres_container_name relational_db --checkpoint_dir /opt/via/checkpoints 2>&1 | tee -a /tmp/before_install.log
 
 # Install Docker if not installed
 if ! command -v docker &> /dev/null

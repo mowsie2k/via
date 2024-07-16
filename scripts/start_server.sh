@@ -34,8 +34,8 @@ echo "Bringing up Docker Compose services" | tee -a /tmp/start_server.log
 /usr/local/bin/docker-compose -f $COMPOSE_DIR/docker-compose.dev.yml -p danswer-stack up -d --build 2>&1 | tee -a /tmp/start_server.log
 
 # Load the saved state
-echo "Loading saved state" | tee -a /tmp/start_server.log
-python3 /opt/via/backend/scripts/save_load_state.py --load --postgres_container_name relational_db --checkpoint_dir /opt/via/checkpoints 2>&1 | tee -a /tmp/start_server.log
+#echo "Loading saved state" | tee -a /tmp/start_server.log
+#python3 /opt/via/backend/scripts/save_load_state.py --load --postgres_container_name relational_db --checkpoint_dir /opt/via/checkpoints 2>&1 | tee -a /tmp/start_server.log
 
 # Log the end of the script
 echo "Completed start_server.sh script" | tee -a /tmp/start_server.log
