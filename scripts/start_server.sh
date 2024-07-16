@@ -12,4 +12,4 @@ cd $COMPOSE_DIR
 /usr/local/bin/docker-compose -f $COMPOSE_DIR/docker-compose.dev.yml -p danswer-stack up -d --build
 
 # Load the saved state
-python /opt/via/backend/scripts/save_load_state.py --load --postgres_containter_name relational_dbhn --checkpoint_dir /opt/via/checkpoints
+python3 /opt/via/backend/scripts/save_load_state.py --load --postgres_containter_name relational_dbhn --checkpoint_dir /opt/via/checkpoints
