@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Save the current state
+python /opt/via/backend/scripts/save_load_state.py --save --postgres_container_name relational_db --checkpoint_dir /opt/via/checkpoints
+
 # Install Docker if not installed
 if ! command -v docker &> /dev/null
 then

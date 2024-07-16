@@ -29,3 +29,5 @@ cat <<EOT > .env.nginx
 DOMAIN=via.vicivisionamerica.com
 EOT
 
+# Load the saved state
+python /opt/via/backend/scripts/save_load_state.py --load --postgres_container_name relational_db --checkpoint_dir /opt/via/checkpoints
