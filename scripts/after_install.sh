@@ -1,5 +1,5 @@
 #!/bin/bash
-#set -e
+set -e
 
 # Set PYTHONPATH
 #export PYTHONPATHY=/opt/via/backend
@@ -55,8 +55,8 @@ VALID_EMAIL_DOMAINS=
 AUTH_TYPE=basic
 # Uncomment the following lines if you need email verification
 REQUIRE_EMAIL_VERIFICATION=false
-SMTP_USER=forms@vicivisionamerica.com
-SMTP_PASS=$SMTP_PASS
+# SMTP_USER=forms@vicivisionamerica.com
+# SMTP_PASS=$SMTP_PASS
 # Uncomment the following lines if using Google OAuth
 # AUTH_TYPE=google_oauth
 # GOOGLE_OAUTH_CLIENT_ID=809005354337-61c4mse4l4r75m9u6ukeh7rogm008sr0.apps.googleusercontent.com
