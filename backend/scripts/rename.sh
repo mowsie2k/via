@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directory to search
-SEARCH_DIR="../../web/src/components/"
+SEARCH_DIR="../../web/src/"
 
 # Word to find
 FIND_WORD="danswer"
