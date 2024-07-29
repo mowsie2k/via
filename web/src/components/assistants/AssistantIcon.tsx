@@ -18,7 +18,7 @@ export function darkerGenerateColorFromId(id: string): string {
 
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
-
+/*
 export function AssistantIcon({
   assistant,
   size,
@@ -48,3 +48,4 @@ export function AssistantIcon({
     </Tooltip>
   );
 }
+*/
