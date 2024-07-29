@@ -228,10 +228,10 @@ export const AIMessage = ({
       <div className="mx-auto w-[90%] max-w-message-max">
         <div className="xl:ml-8">
           <div className="flex">
-            <AssistantIcon
+            {/*<AssistantIcon
               size="small"
               assistant={alternativeAssistant || currentPersona}
-            />
+            />*/}
 
             <div className="w-full">
               <div className="max-w-message-max break-words">
