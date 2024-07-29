@@ -431,7 +431,7 @@ export function ChatInputBar({
                 />
               </Popup>
 
-              <Popup
+              {/* <Popup
                 tab
                 content={(close, ref) => (
                   <LlmTab
@@ -462,9 +462,9 @@ export function ChatInputBar({
                   )}
                   Icon={CpuIconSkeleton}
                 />
-              </Popup>
+              </Popup> */}
 
-              <ChatInputOption
+              {/* <ChatInputOption
                 flexPriority="stiff"
                 name="File"
                 Icon={FiPlusCircle}
@@ -482,7 +482,7 @@ export function ChatInputBar({
                   };
                   input.click();
                 }}
-              />
+              /> */}
             </div>
             <div className="absolute bottom-2.5 right-10">
               <div
