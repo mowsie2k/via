@@ -191,7 +191,7 @@ export function AssistantsGallery({
 
               <p className="text-sm mt-2">{assistant.description}</p>
               <p className="text-subtle text-sm my-2">
-                Author: {assistant.owner?.email || "Danswer"}
+                Author: {assistant.owner?.email || "VIA"}
               </p>
               {assistant.tools.length > 0 && (
                 <AssistantTools list assistant={assistant} />

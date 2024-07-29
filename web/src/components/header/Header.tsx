@@ -44,20 +44,12 @@ export function Header({ user, page }: HeaderProps) {
             <div className="mr-1 mb-auto">
               <Logo />
             </div>
-            <div className="my-auto">
-              {enterpriseSettings && enterpriseSettings.application_name ? (
-                <div>
-                  <HeaderTitle>
-                    {enterpriseSettings.application_name}
-                  </HeaderTitle>
-                  {!NEXT_PUBLIC_DO_NOT_USE_TOGGLE_OFF_DANSWER_POWERED && (
-                    <p className="text-xs text-subtle">Powered by Danswer</p>
-                  )}
-                </div>
-              ) : (
+              <div className="my-auto">
                 <HeaderTitle>VIA</HeaderTitle>
-              )}
-            </div>
+                {!NEXT_PUBLIC_DO_NOT_USE_TOGGLE_OFF_DANSWER_POWERED && (
+                 <p className="text-xs text-subtle">Powered by Danswer</p>
+                )}
+             </div>
           </div>
         </Link>
         <div className="ml-auto h-full flex flex-col">

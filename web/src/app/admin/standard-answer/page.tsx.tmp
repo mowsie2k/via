@@ -1,0 +1,119 @@
+"use client";
+
+import { AdminPageTitle } from "@/components/admin/Title";
+import { ClipboardIcon, EditIcon, TrashIcon } from "@/components/icons/icons";
+import { PopupSpec, usePopup } from "@/components/admin/connectors/Popup";
+import { useStandardAnswers, useStandardAnswerCategories } from "./hooks";
+import { ThreeDotsLoader } from "@/components/Loading";
+import { ErrorCallout } from "@/components/ErrorCallout";
+import { Button, Divider, Text } from "@tremor/react";
+import Link from "next/link";
+import { StandardAnswer, StandardAnswerCategory } from "@/lib/types";
+import { MagnifyingGlass } from "@phosphor-icons/react";
+import { useState } from "react";
+import {
+  Table,
+  TableHead,
+  TableRow,
+  TableHeaderCell,
+  TableBody,
+  TableCell,
+} from "@tremor/react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { deleteStandardAnswer } from "./lib";
+import { FilterDropdown } from "@/components/search/filtering/FilterDropdown";
+import { FiTag } from "react-icons/fi";
+import { SelectedBubble } from "@/components/search/filtering/Filters";
+import { PageSelector } from "@/components/PageSelector";
+
+const NUM_RESULTS_PER_PAGE = 10;
+
+type Displayable = JSX.Element | string;
+
+const RowTemplate = ({
+  id,
+  entries,
+}: {
+  id: number;
+  entries: [Displayable, Displayable, Displayable, Displayable, Displayable];
+}) => {
+  return (
+    <TableRow key={id}>
+      <TableCell className="w-1/24">{entries[0]}</TableCell>
+      <TableCell className="w-2/12">{entries[1]}</TableCell>
+      <TableCell className="w-2/12">{entries[2]}</TableCell>
+      <TableCell className="w-7/12 overflow-auto">{entries[3]}</TableCell>
+      <TableCell className="w-1/24">{entries[4]}</TableCell>
+    </TableRow>
+  );
+};
+
+const CategoryBubble = ({
+  name,
+  onDelete,
+}: {
+  name: string;
+  onDelete?: () => void;
+}) => (
+  <span
+    className={`
+      inline-block
+      px-2
+      py-1
+      mr-1
+      mb-1
+      text-xs
+      font-semibold
+      text-emphasis
+      bg-hover
+      rounded-full
+      items-center
+      w-fit
+      ${onDelete ? "cursor-pointer" : ""}
+    `}
+    onClick={onDelete}
+  >
+    {name}
+    {onDelete && (
+      <button
+        className="ml-1 text-subtle hover:text-emphasis"
+        aria-label="Remove category"
+      >
+        &times;
+      </button>
+    )}
+  </span>
+);
+
+const StandardAnswersTableRow = ({
+  standardAnswer,
+  handleDelete,
+}: {
+  standardAnswer: StandardAnswer;
+  handleDelete: (id: number) => void;
+}) => {
+  return (
+    <RowTemplate
+      id={standardAnswer.id}
+      entries={[
+        <Link
+          key={`edit-${standardAnswer.id}`}
+          href={`/admin/standard-answer/${standardAnswer.id}`}
+        >
+          <EditIcon />
+        </Link>,
+        <div key={`categories-${standardAnswer.id}`}>
+          {standardAnswer.categories.map((category) => (
+            <CategoryBubble key={category.id} name={category.name} />
+          ))}
+        </div>,
+        standardAnswer.keyword,
+        <ReactMarkdown
+          key={`answer-${standardAnswer.id}`}
+          className="prose"
+          remarkPlugins={[remarkGfm]}
+        >
+          {standardAnswer.answer}
+        </ReactMarkdown>,
+        <div
