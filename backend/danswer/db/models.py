@@ -137,10 +137,37 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     )
 
     prompts: Mapped[list["Prompt"]] = relationship("Prompt", back_populates="user")
+    input_prompts: Mapped[list["InputPrompt"]] = relationship(
+        "InputPrompt", back_populates="user"
+    )
+
     # Personas owned by this user
     personas: Mapped[list["Persona"]] = relationship("Persona", back_populates="user")
     # Custom tools created by this user
     custom_tools: Mapped[list["Tool"]] = relationship("Tool", back_populates="user")
+
+
+class InputPrompt(Base):
+    __tablename__ = "inputprompt"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    prompt: Mapped[str] = mapped_column(String)
+    content: Mapped[str] = mapped_column(String)
+    active: Mapped[bool] = mapped_column(Boolean)
+    user: Mapped[User | None] = relationship("User", back_populates="input_prompts")
+    is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"))
+
+
+class InputPrompt__User(Base):
+    __tablename__ = "inputprompt__user"
+
+    input_prompt_id: Mapped[int] = mapped_column(
+        ForeignKey("inputprompt.id"), primary_key=True
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("inputprompt.id"), primary_key=True
+    )
 
 
 class AccessToken(SQLAlchemyBaseAccessTokenTableUUID, Base):
@@ -342,6 +369,9 @@ class ConnectorCredentialPair(Base):
         back_populates="connector_credential_pairs",
         overlaps="document_set",
     )
+    index_attempts: Mapped[list["IndexAttempt"]] = relationship(
+        "IndexAttempt", back_populates="connector_credential_pair"
+    )
 
 
 class Document(Base):
@@ -421,6 +451,9 @@ class Connector(Base):
     connector_specific_config: Mapped[dict[str, Any]] = mapped_column(
         postgresql.JSONB()
     )
+    indexing_start: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
     refresh_freq: Mapped[int | None] = mapped_column(Integer, nullable=True)
     prune_freq: Mapped[int | None] = mapped_column(Integer, nullable=True)
     time_created: Mapped[datetime.datetime] = mapped_column(
@@ -439,13 +472,16 @@ class Connector(Base):
     documents_by_connector: Mapped[
         list["DocumentByConnectorCredentialPair"]
     ] = relationship("DocumentByConnectorCredentialPair", back_populates="connector")
-    index_attempts: Mapped[list["IndexAttempt"]] = relationship(
-        "IndexAttempt", back_populates="connector"
-    )
 
 
 class Credential(Base):
     __tablename__ = "credential"
+
+    name: Mapped[str] = mapped_column(String, nullable=True)
+
+    source: Mapped[DocumentSource] = mapped_column(
+        Enum(DocumentSource, native_enum=False)
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     credential_json: Mapped[dict[str, Any]] = mapped_column(EncryptedJson())
@@ -467,9 +503,7 @@ class Credential(Base):
     documents_by_credential: Mapped[
         list["DocumentByConnectorCredentialPair"]
     ] = relationship("DocumentByConnectorCredentialPair", back_populates="credential")
-    index_attempts: Mapped[list["IndexAttempt"]] = relationship(
-        "IndexAttempt", back_populates="credential"
-    )
+
     user: Mapped[User | None] = relationship("User", back_populates="credentials")
 
 
@@ -521,12 +555,12 @@ class EmbeddingModel(Base):
           cloud_provider='{self.cloud_provider.name if self.cloud_provider else 'None'}')>"
 
     @property
-    def api_key(self) -> str | None:
-        return self.cloud_provider.api_key if self.cloud_provider else None
+    def provider_type(self) -> str | None:
+        return self.cloud_provider.name if self.cloud_provider is not None else None
 
     @property
-    def provider_type(self) -> str | None:
-        return self.cloud_provider.name if self.cloud_provider else None
+    def api_key(self) -> str | None:
+        return self.cloud_provider.api_key if self.cloud_provider is not None else None
 
 
 class IndexAttempt(Base):
@@ -539,13 +573,10 @@ class IndexAttempt(Base):
     __tablename__ = "index_attempt"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    connector_id: Mapped[int | None] = mapped_column(
-        ForeignKey("connector.id"),
-        nullable=True,
-    )
-    credential_id: Mapped[int | None] = mapped_column(
-        ForeignKey("credential.id"),
-        nullable=True,
+
+    connector_credential_pair_id: Mapped[int] = mapped_column(
+        ForeignKey("connector_credential_pair.id"),
+        nullable=False,
     )
 
     # Some index attempts that run from beginning will still have this as False
@@ -583,12 +614,10 @@ class IndexAttempt(Base):
         onupdate=func.now(),
     )
 
-    connector: Mapped[Connector] = relationship(
-        "Connector", back_populates="index_attempts"
+    connector_credential_pair: Mapped[ConnectorCredentialPair] = relationship(
+        "ConnectorCredentialPair", back_populates="index_attempts"
     )
-    credential: Mapped[Credential] = relationship(
-        "Credential", back_populates="index_attempts"
-    )
+
     embedding_model: Mapped[EmbeddingModel] = relationship(
         "EmbeddingModel", back_populates="index_attempts"
     )
@@ -596,8 +625,7 @@ class IndexAttempt(Base):
     __table_args__ = (
         Index(
             "ix_index_attempt_latest_for_connector_credential_pair",
-            "connector_id",
-            "credential_id",
+            "connector_credential_pair_id",
             "time_created",
         ),
     )
@@ -605,7 +633,6 @@ class IndexAttempt(Base):
     def __repr__(self) -> str:
         return (
             f"<IndexAttempt(id={self.id!r}, "
-            f"connector_id={self.connector_id!r}, "
             f"status={self.status!r}, "
             f"error_msg={self.error_msg!r})>"
             f"time_created={self.time_created!r}, "
@@ -826,6 +853,8 @@ class ChatMessage(Base):
         secondary="chat_message__search_doc",
         back_populates="chat_messages",
     )
+    # NOTE: Should always be attached to the `assistant` message.
+    # represents the tool calls used to generate this message
     tool_calls: Mapped[list["ToolCall"]] = relationship(
         "ToolCall",
         back_populates="message",

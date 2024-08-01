@@ -1,6 +1,6 @@
 "use client";
 
-import { FiEdit, FiFolderPlus } from "react-icons/fi";
+import { FiArrowDown, FiEdit, FiFolderPlus } from "react-icons/fi";
 import {
   Dispatch,
   ForwardedRef,
@@ -32,21 +32,26 @@ import {
   AssistantsIcon,
   AssistantsIconSkeleton,
   BackIcon,
+  BookIcon,
+  BookmarkIconSkeleton,
+  ClosedBookIcon,
   LefToLineIcon,
   RightToLineIcon,
 } from "@/components/icons/icons";
 import { PagesTab } from "./PagesTab";
 import { Tooltip } from "@/components/tooltip/Tooltip";
 import KeyboardSymbol from "@/lib/browserUtilities";
+import { pageType } from "./types";
 
 interface HistorySidebarProps {
-  page: "search" | "chat" | "assistants";
+  page: pageType;
   existingChats?: ChatSession[];
   currentChatSession?: ChatSession | null | undefined;
   folders?: Folder[];
   openedFolders?: { [key: number]: boolean };
   toggleSidebar?: () => void;
   toggled?: boolean;
+  removeToggle?: () => void;
 }
 
 export const HistorySidebar = forwardRef<HTMLDivElement, HistorySidebarProps>(
@@ -59,6 +64,7 @@ export const HistorySidebar = forwardRef<HTMLDivElement, HistorySidebarProps>(
       folders,
       openedFolders,
       toggleSidebar,
+      removeToggle,
     },
     ref: ForwardedRef<HTMLDivElement>
   ) => {
@@ -100,11 +106,11 @@ export const HistorySidebar = forwardRef<HTMLDivElement, HistorySidebarProps>(
             transition-transform`}
         >
           <div className="max-w-full ml-3 mr-3 mt-2 flex flex gap-x-1 items-center my-auto text-text-700 text-xl">
-            <div className="mr-1 mb-auto h-6 w-6">
+            <div className="mr-1 desktop:invisible mb-auto h-6 w-6">
               <Logo height={24} width={24} />
             </div>
 
-            <div className="invisible">
+            <div className="desktop:invisible">
               {enterpriseSettings && enterpriseSettings.application_name ? (
                 <div>
                   <HeaderTitle>
@@ -118,15 +124,24 @@ export const HistorySidebar = forwardRef<HTMLDivElement, HistorySidebarProps>(
                 <HeaderTitle>Danswer</HeaderTitle>
               )}
             </div>
+
             {toggleSidebar && (
-              <Tooltip delayDuration={1000} content={`${commandSymbol}E show`}>
-                <button className="mb-auto ml-auto" onClick={toggleSidebar}>
-                  {!toggled ? <RightToLineIcon /> : <LefToLineIcon />}
+              <Tooltip
+                delayDuration={0}
+                content={toggled ? `Unpin sidebar` : "Pin sidebar"}
+              >
+                <button className="my-auto ml-auto" onClick={toggleSidebar}>
+                  {!toggled && !combinedSettings.isMobile ? (
+                    <RightToLineIcon />
+                  ) : (
+                    <LefToLineIcon />
+                  )}
                 </button>
               </Tooltip>
             )}
           </div>
-          {!(page == "search") && (
+
+          {page == "chat" && (
             <div className="mx-3 mt-4 gap-y-1 flex-col flex gap-x-1.5 items-center items-center">
               <Link
                 href={
@@ -172,11 +187,21 @@ export const HistorySidebar = forwardRef<HTMLDivElement, HistorySidebarProps>(
                   Manage Assistants
                 </p>
               </Link>
+              <Link
+                href="/prompts"
+                className="w-full p-2 bg-white border-border border rounded items-center hover:bg-background-200 cursor-pointer transition-all duration-150 flex gap-x-2"
+              >
+                <ClosedBookIcon className="h-4 w-4 my-auto" />
+                <p className="my-auto flex items-center text-sm">
+                  Manage Prompts
+                </p>
+              </Link>
             </div>
           )}
           <div className="border-b border-border pb-4 mx-3" />
 
           <PagesTab
+            closeSidebar={removeToggle}
             page={page}
             existingChats={existingChats}
             currentChatId={currentChatId}
