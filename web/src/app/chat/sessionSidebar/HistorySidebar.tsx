@@ -121,7 +121,7 @@ export const HistorySidebar = forwardRef<HTMLDivElement, HistorySidebarProps>(
                   )}
                 </div>
               ) : (
-                <HeaderTitle>Danswer</HeaderTitle>
+                <HeaderTitle>VIA</HeaderTitle>
               )}
             </div>
 
