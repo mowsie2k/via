@@ -18,29 +18,9 @@ export function Logo({
   height = height || 32;
   width = width || 30;
 
-  if (
-    !settings ||
-    !settings.enterpriseSettings ||
-    !settings.enterpriseSettings.use_custom_logo
-  ) {
-    return (
-      <div style={{ height, width }} className={className}>
-        <Image src="/vv-logo.png" alt="Logo" width={width} height={height} />
-      </div>
-    );
-  }
-
-  //return (
-  //  <div
-  //    style={{ height, width }}
-  //    className={`flex-none relative ${className}`}
-  //  >
-  //    {/* TODO: figure out how to use Next Image here */}
-  //    <img
-  //      src="/api/enterprise-settings/logo"
-  //      alt="Logo"
-  //      style={{ objectFit: "contain", height, width }}
-  //    />
-  //  </div>
-  //);
+  return (
+    <div style={{ height, width }} className={className}>
+      <Image src="/vv-logo.png" alt="Logo" width={width} height={height} />
+    </div>
+  );
 }

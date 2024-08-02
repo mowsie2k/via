@@ -20,16 +20,7 @@ export default function FixedLogo() {
             <Logo height={24} width={24} />
           </div>
           <div className="">
-            {enterpriseSettings && enterpriseSettings.application_name ? (
-              <div>
-                <HeaderTitle>{enterpriseSettings.application_name}</HeaderTitle>
-                {!NEXT_PUBLIC_DO_NOT_USE_TOGGLE_OFF_DANSWER_POWERED && (
-                  <p className="text-xs text-subtle">Powered by Danswer</p>
-                )}
-              </div>
-            ) : (
-              <HeaderTitle>VIA</HeaderTitle>
-            )}
+            <HeaderTitle>VIA</HeaderTitle>
           </div>
         </div>
       </div>
