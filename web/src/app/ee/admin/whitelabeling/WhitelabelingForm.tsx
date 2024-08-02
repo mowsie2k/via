@@ -47,7 +47,7 @@ export function WhitelabelingForm() {
     <div>
       <Formik
         initialValues={{
-          application_name: enterpriseSettings?.application_name || null,
+          application_name: enterpriseSettings?.application_name || "VIA",
           use_custom_logo: enterpriseSettings?.use_custom_logo || false,
           custom_header_content:
             enterpriseSettings?.custom_header_content || "",
