@@ -503,7 +503,7 @@ export function ChatInputBar({
               suppressContentEditableWarning={true}
             />
 
-            <div className="flex items-center space-x-3 mr-12 px-4 pb-2 ">
+            {/*<div className="flex items-center space-x-3 mr-12 px-4 pb-2 ">
               <Popup
                 removePadding
                 content={(close) => (
@@ -587,6 +587,7 @@ export function ChatInputBar({
                 }}
               />
             </div>
+            */}
             <div className="absolute bottom-2.5 mobile:right-4 desktop:right-10">
               <div
                 className="cursor-pointer"
