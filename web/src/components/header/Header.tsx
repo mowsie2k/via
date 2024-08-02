@@ -16,7 +16,7 @@ export function HeaderTitle({ children }: { children: JSX.Element | string }) {
 
   return (
     <h1 className={`flex ${textSize} text-strong leading-none font-bold`}>
-      {children}
+      VIA
     </h1>
   );
 }
