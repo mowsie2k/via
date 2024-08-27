@@ -1,5 +1,3 @@
-"use client";
-
 import { useRouter } from "next/navigation";
 import { EnterpriseSettings } from "@/app/admin/settings/interfaces";
 import { useContext, useState } from "react";
@@ -11,16 +9,14 @@ import {
   SubLabel,
   TextFormField,
 } from "@/components/admin/connectors/Field";
-import { Button, Divider, Text } from "@tremor/react";
+import { Button, Divider } from "@tremor/react";
 import { ImageUpload } from "./ImageUpload";
 import { AdvancedOptionsToggle } from "@/components/AdvancedOptionsToggle";
-import Link from "next/link";
 
 export function WhitelabelingForm() {
   const router = useRouter();
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null);
   const [selectedLogotype, setSelectedLogotype] = useState<File | null>(null);
-
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   const settings = useContext(SettingsContext);
@@ -55,7 +51,6 @@ export function WhitelabelingForm() {
           application_name: enterpriseSettings?.application_name || "VIA",
           use_custom_logo: enterpriseSettings?.use_custom_logo || false,
           use_custom_logotype: enterpriseSettings?.use_custom_logotype || false,
-
           custom_header_content:
             enterpriseSettings?.custom_header_content || "",
           custom_popup_header: enterpriseSettings?.custom_popup_header || "",
@@ -77,7 +72,6 @@ export function WhitelabelingForm() {
 
           if (selectedLogo) {
             values.use_custom_logo = true;
-
             const formData = new FormData();
             formData.append("file", selectedLogo);
             setSelectedLogo(null);
@@ -98,7 +92,6 @@ export function WhitelabelingForm() {
 
           if (selectedLogotype) {
             values.use_custom_logotype = true;
-
             const formData = new FormData();
             formData.append("file", selectedLogotype);
             setSelectedLogotype(null);
@@ -132,7 +125,6 @@ export function WhitelabelingForm() {
             />
 
             <Label>Custom Logo</Label>
-
             {values.use_custom_logo ? (
               <div className="mt-3">
                 <SubLabel>Current Custom Logo: </SubLabel>
@@ -142,7 +134,6 @@ export function WhitelabelingForm() {
                   style={{ objectFit: "contain" }}
                   className="w-32 h-32 mb-10 mt-4"
                 />
-
                 <Button
                   color="red"
                   size="xs"
@@ -159,7 +150,6 @@ export function WhitelabelingForm() {
                 >
                   Delete
                 </Button>
-
                 <SubLabel>
                   Override the current custom logo by uploading a new image
                   below and clicking the Update button.
@@ -170,7 +160,6 @@ export function WhitelabelingForm() {
                 Specify your own logo to replace the standard VIA logo.
               </SubLabel>
             )}
-
             <ImageUpload
               selectedFile={selectedLogo}
               setSelectedFile={setSelectedLogo}
@@ -183,31 +172,16 @@ export function WhitelabelingForm() {
               setShowAdvancedOptions={setShowAdvancedOptions}
             />
 
-            <br />
-
-            <div className="mt-4">
-              <TextFormField
-                label="Custom Popup Header"
-                name="custom_popup_header"
-                subtext={`The title for the popup that will be displayed for each user on their initial visit 
-                to the application. If left blank AND Custom Popup Content is specified, will use "Welcome to ${
-                  values.application_name || "VIA"
-                }!".`}
-                placeholder="Initial Popup Header"
-                disabled={isSubmitting}
-              />
-            </div>
-            
-                <Divider />
-
+            {showAdvancedOptions && (
+              <>
                 <div className="mt-4">
                   <TextFormField
                     label="Popup Header"
                     name="custom_popup_header"
                     subtext={`The title for the popup that will be displayed for each user on their initial visit 
-        to the application. If left blank AND Custom Popup Content is specified, will use "Welcome to ${
-          values.application_name || "Danswer"
-        }!".`}
+                    to the application. If left blank AND Custom Popup Content is specified, will use "Welcome to ${
+                      values.application_name || "VIA"
+                    }!".`}
                     placeholder="Initial Popup Header"
                     disabled={isSubmitting}
                   />
@@ -234,8 +208,8 @@ export function WhitelabelingForm() {
                     disabled={isSubmitting}
                   />
                 </div>
-                <Label>Chat Footer Logotype</Label>
 
+                <Label>Chat Footer Logotype</Label>
                 {values.use_custom_logotype ? (
                   <div className="mt-3">
                     <SubLabel>Current Custom Logotype: </SubLabel>
@@ -245,7 +219,6 @@ export function WhitelabelingForm() {
                       style={{ objectFit: "contain" }}
                       className="w-32 h-32 mb-10 mt-4"
                     />
-
                     <Button
                       color="red"
                       size="xs"
@@ -262,7 +235,6 @@ export function WhitelabelingForm() {
                     >
                       Delete
                     </Button>
-
                     <SubLabel>
                       Override your uploaded custom logotype by uploading a new
                       image below and clicking the Update button. This logotype

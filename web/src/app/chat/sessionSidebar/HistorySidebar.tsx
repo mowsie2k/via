@@ -103,7 +103,6 @@ export const HistorySidebar = forwardRef<HTMLDivElement, HistorySidebarProps>(
             transition-transform 
             mt-2`}
         >
-<<<<<<< HEAD
           <div className="max-w-full ml-3 mr-3 mt-2 flex flex gap-x-1 items-center my-auto text-text-700 text-xl">
             <div className="mr-1 desktop:invisible mb-auto h-6 w-6">
               <Logo height={24} width={24} />
