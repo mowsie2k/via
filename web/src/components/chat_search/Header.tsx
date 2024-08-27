@@ -1,40 +1,35 @@
+"use client";
 import { User } from "@/lib/types";
-import { TbLayoutSidebarLeftExpand } from "react-icons/tb";
 import { UserDropdown } from "../UserDropdown";
-import { FiShare2, FiSidebar } from "react-icons/fi";
+import { FiShare2 } from "react-icons/fi";
 import { SetStateAction, useContext, useEffect } from "react";
-import { Logo } from "../Logo";
-import { ChatIcon, NewChatIcon, PlusCircleIcon } from "../icons/icons";
-import {
-  NEXT_PUBLIC_DO_NOT_USE_TOGGLE_OFF_DANSWER_POWERED,
-  NEXT_PUBLIC_NEW_CHAT_DIRECTS_TO_SAME_PERSONA,
-} from "@/lib/constants";
+import { NewChatIcon } from "../icons/icons";
+import { NEXT_PUBLIC_NEW_CHAT_DIRECTS_TO_SAME_PERSONA } from "@/lib/constants";
 import { ChatSession } from "@/app/chat/interfaces";
-import { HeaderTitle } from "../header/Header";
-import { Tooltip } from "../tooltip/Tooltip";
-import KeyboardSymbol from "@/lib/browserUtilities";
 import Link from "next/link";
 import { SettingsContext } from "../settings/SettingsProvider";
 import { pageType } from "@/app/chat/sessionSidebar/types";
+import { useRouter } from "next/navigation";
+import { ChatBanner } from "@/app/chat/ChatBanner";
+import LogoType from "../header/LogoType";
 
 export default function FunctionalHeader({
   user,
   page,
   currentChatSession,
   setSharingModalVisible,
-  toggleSidebar,
+  toggleSidebar = () => null,
+  reset = () => null,
+  sidebarToggled,
 }: {
+  reset?: () => void;
   page: pageType;
   user: User | null;
+  sidebarToggled?: boolean;
   currentChatSession?: ChatSession | null | undefined;
   setSharingModalVisible?: (value: SetStateAction<boolean>) => void;
-  toggleSidebar: () => void;
+  toggleSidebar?: () => void;
 }) {
-  const combinedSettings = useContext(SettingsContext);
-  const enterpriseSettings = combinedSettings?.enterpriseSettings;
-
-  const commandSymbol = KeyboardSymbol();
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey) {
@@ -58,6 +53,17 @@ export default function FunctionalHeader({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+  const router = useRouter();
+
+  const handleNewChat = () => {
+    reset();
+    const newChatUrl =
+      `/${page}` +
+      (NEXT_PUBLIC_NEW_CHAT_DIRECTS_TO_SAME_PERSONA && currentChatSession
+        ? `?assistantId=${currentChatSession.persona_id}`
+        : "");
+    router.push(newChatUrl);
+  };
   return (
     <div className="pb-6 left-0 sticky top-0 z-20 w-full relative flex">
       <div className="mt-2 mx-4 text-text-700 flex w-full">
@@ -105,7 +111,15 @@ export default function FunctionalHeader({
           )}
         </div>
 
-        <div className="ml-auto my-auto flex gap-x-2">
+        <div className="invisible">
+          <LogoType
+            page={page}
+            toggleSidebar={toggleSidebar}
+            handleNewChat={handleNewChat}
+          />
+        </div>
+
+        <div className="absolute right-0 top-0 flex gap-x-2">
           {setSharingModalVisible && (
             <div
               onClick={() => setSharingModalVisible(true)}
@@ -128,7 +142,7 @@ export default function FunctionalHeader({
                 : "")
             }
           >
-            <div className="cursor-pointer ml-2 flex-none text-text-700 hover:text-text-600 transition-colors duration-300">
+            <div className="cursor-pointer mr-4 flex-none text-text-700 hover:text-text-600 transition-colors duration-300">
               <NewChatIcon size={20} />
             </div>
           </Link>

@@ -14,10 +14,10 @@ import {
 import { ChatSession } from "@/app/chat/interfaces";
 import { Persona } from "@/app/admin/assistants/interfaces";
 import { InputPrompt } from "@/app/admin/prompt-library/interfaces";
-import { FullEmbeddingModelResponse } from "@/app/admin/models/embedding/components/types";
+import { FullEmbeddingModelResponse } from "@/components/embedding/interfaces";
 import { Settings } from "@/app/admin/settings/interfaces";
 import { fetchLLMProvidersSS } from "@/lib/llm/fetchLLMs";
-import { LLMProviderDescriptor } from "@/app/admin/models/llm/interfaces";
+import { LLMProviderDescriptor } from "@/app/admin/configuration/llm/interfaces";
 import { Folder } from "@/app/chat/folders/interfaces";
 import { personaComparator } from "@/app/admin/assistants/lib";
 import { cookies } from "next/headers";
@@ -126,6 +126,7 @@ export async function fetchChatData(searchParams: {
       `Failed to fetch chat sessions - ${chatSessionsResponse?.text()}`
     );
   }
+
   // Larger ID -> created later
   chatSessions.sort((a, b) => (a.id > b.id ? -1 : 1));
 
@@ -200,6 +201,18 @@ export async function fetchChatData(searchParams: {
   // passthrough and don't do any retrieval
   if (!hasAnyConnectors) {
     assistants = assistants.filter((assistant) => assistant.num_chunks === 0);
+  }
+
+  const hasOpenAIProvider = llmProviders.some(
+    (provider) => provider.provider === "openai"
+  );
+  if (!hasOpenAIProvider) {
+    assistants = assistants.filter(
+      (assistant) =>
+        !assistant.tools.some(
+          (tool) => tool.in_code_tool_id === "ImageGenerationTool"
+        )
+    );
   }
 
   let folders: Folder[] = [];

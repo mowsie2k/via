@@ -4,12 +4,16 @@ import { useState, useRef, useContext } from "react";
 import { FiLogOut } from "react-icons/fi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User } from "@/lib/types";
+import { User, UserRole } from "@/lib/types";
 import { checkUserIsNoAuthUser, logout } from "@/lib/user";
 import { Popover } from "./popover/Popover";
 import { LOGOUT_DISABLED } from "@/lib/constants";
 import { SettingsContext } from "./settings/SettingsProvider";
-import { LightSettingsIcon } from "./icons/icons";
+import {
+  AssistantsIconSkeleton,
+  LightSettingsIcon,
+  UsersIcon,
+} from "./icons/icons";
 import { pageType } from "@/app/chat/sessionSidebar/types";
 
 export function UserDropdown({
@@ -38,7 +42,10 @@ export function UserDropdown({
     });
   };
 
-  const showAdminPanel = !user || user.role === "admin";
+  const showAdminPanel = !user || user.role === UserRole.ADMIN;
+  const showCuratorPanel =
+    user &&
+    (user.role === UserRole.CURATOR || user.role === UserRole.GLOBAL_CURATOR);
   const showLogout =
     user && !checkUserIsNoAuthUser(user.id) && !LOGOUT_DISABLED;
 
@@ -105,6 +112,19 @@ export function UserDropdown({
                 </Link>
               </>
             )}
+            {showCuratorPanel && (
+              <>
+                <Link
+                  href="/admin/indexing/status"
+                  className="flex py-3 px-4 cursor-pointer !
+                   rounded hover:bg-hover-light"
+                >
+                  <LightSettingsIcon className="h-5 w-5 my-auto mr-2" />
+                  Curator Panel
+                </Link>
+              </>
+            )}
+
             {showLogout && (
               <>
                 {(!(page == "search" || page == "chat") || showAdminPanel) && (
