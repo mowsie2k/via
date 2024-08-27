@@ -66,49 +66,29 @@ export default function FunctionalHeader({
   };
   return (
     <div className="pb-6 left-0 sticky top-0 z-20 w-full relative flex">
-      <div className="mt-2 mx-4 text-text-700 flex w-full">
-        <div className="absolute  z-[100] my-auto flex items-center text-xl font-bold">
-          <button
-            onClick={() => toggleSidebar()}
-            className="pt-[2px] desktop:invisible mb-auto"
-          >
-            <FiSidebar size={20} />
-          </button>
-          <div className="invisible break-words inline-block w-fit ml-2 text-text-700 text-xl">
-            <div className="max-w-[200px]">
-              {enterpriseSettings && enterpriseSettings.application_name ? (
-                <div>
-                  <HeaderTitle>
-                    {enterpriseSettings.application_name}
-                  </HeaderTitle>
-                  {!NEXT_PUBLIC_DO_NOT_USE_TOGGLE_OFF_DANSWER_POWERED && (
-                    <p className="text-xs text-subtle">Powered by Danswer</p>
-                  )}
-                </div>
-              ) : (
-                <HeaderTitle>VIA</HeaderTitle>
-              )}
-            </div>
-          </div>
-
-          {page == "chat" && (
-            <Tooltip delayDuration={1000} content={`${commandSymbol}U`}>
-              <Link
-                className="mobile:hidden my-auto"
-                href={
-                  `/${page}` +
-                  (NEXT_PUBLIC_NEW_CHAT_DIRECTS_TO_SAME_PERSONA &&
-                  currentChatSession
-                    ? `?assistantId=${currentChatSession.persona_id}`
-                    : "")
-                }
-              >
-                <div className="cursor-pointer ml-2 flex-none text-text-700 hover:text-text-600 transition-colors duration-300">
-                  <NewChatIcon size={20} />
-                </div>
-              </Link>
-            </Tooltip>
-          )}
+      <div className="mt-2 mx-2.5 cursor-pointer text-text-700 relative flex w-full">
+        <LogoType
+          assistantId={currentChatSession?.persona_id}
+          page={page}
+          toggleSidebar={toggleSidebar}
+          handleNewChat={handleNewChat}
+        />
+        <div
+          style={{ transition: "width 0.30s ease-out" }}
+          className={`
+            mobile:hidden
+            flex-none 
+            mx-auto
+            overflow-y-hidden 
+            transition-all 
+            duration-300 
+            ease-in-out
+            h-full
+            ${sidebarToggled ? "w-[250px]" : "w-[0px]"}
+            `}
+        />
+        <div className="w-full mobile:-mx-20 desktop:px-4">
+          <ChatBanner />
         </div>
 
         <div className="invisible">
