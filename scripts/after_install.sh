@@ -78,5 +78,11 @@ env | tee -a /tmp/after_install.log
 #echo "Loading saved state" | tee -a /tmp/after_install.log
 #python3 /opt/via/backend/scripts/save_load_state.py --load --postgres_container_name relational_db --checkpoint_dir /opt/via/checkpoints 2>&1 | tee -a /tmp/after_install.log
 
+# Make scripts executable
+chmod +x /opt/via/scripts/backup_data.sh /opt/via/scripts/restore_data.sh
+
+# Set up cron job for nightly backups
+(crontab -l 2>/dev/null; echo "0 2 * * * /opt/via/scripts/backup_data.sh") | crontab -
+
 # Log the end of the script
 echo "Completed after_install.sh script" | tee -a /tmp/after_install.log
