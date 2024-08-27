@@ -1,233 +1,305 @@
 "use client";
 
-import { FiEdit, FiFolderPlus } from "react-icons/fi";
-import { ForwardedRef, forwardRef, useContext, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChatSession } from "../interfaces";
-import { NEXT_PUBLIC_NEW_CHAT_DIRECTS_TO_SAME_PERSONA } from "@/lib/constants";
-import { Folder } from "../folders/interfaces";
-import { createFolder } from "../folders/FolderManagement";
-import { usePopup } from "@/components/admin/connectors/Popup";
+import { EnterpriseSettings } from "@/app/admin/settings/interfaces";
+import { useContext, useState } from "react";
 import { SettingsContext } from "@/components/settings/SettingsProvider";
-
-import React from "react";
+import { Form, Formik } from "formik";
+import * as Yup from "yup";
 import {
-  AssistantsIconSkeleton,
-  ClosedBookIcon,
-} from "@/components/icons/icons";
-import { PagesTab } from "./PagesTab";
-import { pageType } from "./types";
-import LogoType from "@/components/header/LogoType";
+  Label,
+  SubLabel,
+  TextFormField,
+} from "@/components/admin/connectors/Field";
+import { Button, Divider, Text } from "@tremor/react";
+import { ImageUpload } from "./ImageUpload";
+import { AdvancedOptionsToggle } from "@/components/AdvancedOptionsToggle";
+import Link from "next/link";
 
-interface HistorySidebarProps {
-  page: pageType;
-  existingChats?: ChatSession[];
-  currentChatSession?: ChatSession | null | undefined;
-  folders?: Folder[];
-  openedFolders?: { [key: number]: boolean };
-  toggleSidebar?: () => void;
-  toggled?: boolean;
-  removeToggle?: () => void;
-  reset?: () => void;
-  showShareModal?: (chatSession: ChatSession) => void;
-  showDeleteModal?: (chatSession: ChatSession) => void;
-  stopGenerating?: () => void;
-  explicitlyUntoggle: () => void;
-}
+export function WhitelabelingForm() {
+  const router = useRouter();
+  const [selectedLogo, setSelectedLogo] = useState<File | null>(null);
+  const [selectedLogotype, setSelectedLogotype] = useState<File | null>(null);
 
-export const HistorySidebar = forwardRef<HTMLDivElement, HistorySidebarProps>(
-  (
-    {
-      reset = () => null,
-      toggled,
-      page,
-      existingChats,
-      currentChatSession,
-      folders,
-      openedFolders,
-      explicitlyUntoggle,
-      toggleSidebar,
-      removeToggle,
-      stopGenerating = () => null,
-      showShareModal,
-      showDeleteModal,
-    },
-    ref: ForwardedRef<HTMLDivElement>
-  ) => {
-    const router = useRouter();
-    const { popup, setPopup } = usePopup();
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
-    // For determining intial focus state
-    const [newFolderId, setNewFolderId] = useState<number | null>(null);
-
-    const currentChatId = currentChatSession?.id;
-
-    // NOTE: do not do something like the below - assume that the parent
-    // will handle properly refreshing the existingChats
-    // useEffect(() => {
-    //   router.refresh();
-    // }, [currentChatId]);
-
-    const combinedSettings = useContext(SettingsContext);
-    if (!combinedSettings) {
-      return null;
-    }
-
-    const handleNewChat = () => {
-      reset();
-      const newChatUrl =
-        `/${page}` +
-        (NEXT_PUBLIC_NEW_CHAT_DIRECTS_TO_SAME_PERSONA && currentChatSession
-          ? `?assistantId=${currentChatSession.persona_id}`
-          : "");
-      router.push(newChatUrl);
-    };
-
-    return (
-      <>
-        {popup}
-
-        <div
-          ref={ref}
-          className={`
-            flex
-            flex-none
-            bg-background-100
-            w-full
-            border-r 
-            border-border 
-            flex 
-            flex-col relative
-            h-screen
-            transition-transform 
-            mt-2`}
-        >
-          <div className="max-w-full ml-3 mr-3 mt-2 flex flex gap-x-1 items-center my-auto text-text-700 text-xl">
-            <div className="mr-1 desktop:invisible mb-auto h-6 w-6">
-              <Logo height={24} width={24} />
-            </div>
-
-            <div className="desktop:invisible">
-              {enterpriseSettings && enterpriseSettings.application_name ? (
-                <div>
-                  <HeaderTitle>
-                    {enterpriseSettings.application_name}
-                  </HeaderTitle>
-                  {!NEXT_PUBLIC_DO_NOT_USE_TOGGLE_OFF_DANSWER_POWERED && (
-                    <p className="text-xs text-subtle">Powered by VIA</p>
-                  )}
-                </div>
-              ) : (
-                <HeaderTitle>VIA</HeaderTitle>
-              )}
-            </div>
-
-            {toggleSidebar && (
-              <Tooltip
-                delayDuration={0}
-                content={toggled ? `Unpin sidebar` : "Pin sidebar"}
-              >
-                <button className="my-auto ml-auto" onClick={toggleSidebar}>
-                  {!toggled && !combinedSettings.isMobile ? (
-                    <RightToLineIcon />
-                  ) : (
-                    <LefToLineIcon />
-                  )}
-                </button>
-              </Tooltip>
-            )}
-          </div>
-
-          {/*=======
-          <LogoType
-            showArrow={true}
-            toggled={toggled}
-            page={page}
-            toggleSidebar={toggleSidebar}
-            explicitlyUntoggle={explicitlyUntoggle}
-          />
->>>>>>> upstream/main
-          */}
-          {page == "chat" && (
-            <div className="mx-3 mt-4 gap-y-1 flex-col flex gap-x-1.5 items-center items-center">
-              <Link
-                className="w-full p-2 bg-white border-border border rounded items-center hover:bg-background-200 cursor-pointer transition-all duration-150 flex gap-x-2"
-                href={
-                  `/${page}` +
-                  (NEXT_PUBLIC_NEW_CHAT_DIRECTS_TO_SAME_PERSONA &&
-                  currentChatSession?.persona_id
-                    ? `?assistantId=${currentChatSession?.persona_id}`
-                    : "")
-                }
-                onClick={(e) => {
-                  if (e.metaKey || e.ctrlKey) {
-                    return;
-                  }
-                  if (handleNewChat) {
-                    handleNewChat();
-                  }
-                }}
-              >
-                <FiEdit className="flex-none " />
-                <p className="my-auto flex items-center text-sm">New Chat</p>
-              </Link>
-              <button
-                onClick={() =>
-                  createFolder("New Folder")
-                    .then((folderId) => {
-                      router.refresh();
-                      setNewFolderId(folderId);
-                    })
-                    .catch((error) => {
-                      console.error("Failed to create folder:", error);
-                      setPopup({
-                        message: `Failed to create folder: ${error.message}`,
-                        type: "error",
-                      });
-                    })
-                }
-                className="w-full p-2 bg-white border-border border rounded items-center hover:bg-background-200 cursor-pointer transition-all duration-150 flex gap-x-2"
-              >
-                <FiFolderPlus className="my-auto" />
-                <p className="my-auto flex items-center text-sm">New Folder</p>
-              </button>
-
-              <Link
-                href="/assistants/mine"
-                className="w-full p-2 bg-white border-border border rounded items-center hover:bg-background-200 cursor-pointer transition-all duration-150 flex gap-x-2"
-              >
-                <AssistantsIconSkeleton className="h-4 w-4 my-auto" />
-                <p className="my-auto flex items-center text-sm">
-                  Manage Assistants
-                </p>
-              </Link>
-              <Link
-                href="/prompts"
-                className="w-full p-2 bg-white border-border border rounded items-center hover:bg-background-200 cursor-pointer transition-all duration-150 flex gap-x-2"
-              >
-                <ClosedBookIcon className="h-4 w-4 my-auto" />
-                <p className="my-auto flex items-center text-sm">
-                  Manage Prompts
-                </p>
-              </Link>
-            </div>
-          )}
-          <div className="border-b border-border pb-4 mx-3" />
-          <PagesTab
-            newFolderId={newFolderId}
-            showDeleteModal={showDeleteModal}
-            showShareModal={showShareModal}
-            closeSidebar={removeToggle}
-            page={page}
-            existingChats={existingChats}
-            currentChatId={currentChatId}
-            folders={folders}
-            openedFolders={openedFolders}
-          />
-        </div>
-      </>
-    );
+  const settings = useContext(SettingsContext);
+  if (!settings) {
+    return null;
   }
-);
-HistorySidebar.displayName = "HistorySidebar";
+  const enterpriseSettings = settings.enterpriseSettings;
+
+  async function updateEnterpriseSettings(newValues: EnterpriseSettings) {
+    const response = await fetch("/api/admin/enterprise-settings", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...(enterpriseSettings || {}),
+        ...newValues,
+      }),
+    });
+    if (response.ok) {
+      router.refresh();
+    } else {
+      const errorMsg = (await response.json()).detail;
+      alert(`Failed to update settings. ${errorMsg}`);
+    }
+  }
+
+  return (
+    <div>
+      <Formik
+        initialValues={{
+          application_name: enterpriseSettings?.application_name || null,
+          use_custom_logo: enterpriseSettings?.use_custom_logo || false,
+          use_custom_logotype: enterpriseSettings?.use_custom_logotype || false,
+
+          custom_header_content:
+            enterpriseSettings?.custom_header_content || "",
+          custom_popup_header: enterpriseSettings?.custom_popup_header || "",
+          custom_popup_content: enterpriseSettings?.custom_popup_content || "",
+          custom_lower_disclaimer_content:
+            enterpriseSettings?.custom_lower_disclaimer_content || "",
+        }}
+        validationSchema={Yup.object().shape({
+          application_name: Yup.string().nullable(),
+          use_custom_logo: Yup.boolean().required(),
+          use_custom_logotype: Yup.boolean().required(),
+          custom_header_content: Yup.string().nullable(),
+          custom_popup_header: Yup.string().nullable(),
+          custom_popup_content: Yup.string().nullable(),
+          custom_lower_disclaimer_content: Yup.string().nullable(),
+        })}
+        onSubmit={async (values, formikHelpers) => {
+          formikHelpers.setSubmitting(true);
+
+          if (selectedLogo) {
+            values.use_custom_logo = true;
+
+            const formData = new FormData();
+            formData.append("file", selectedLogo);
+            setSelectedLogo(null);
+            const response = await fetch(
+              "/api/admin/enterprise-settings/logo",
+              {
+                method: "PUT",
+                body: formData,
+              }
+            );
+            if (!response.ok) {
+              const errorMsg = (await response.json()).detail;
+              alert(`Failed to upload logo. ${errorMsg}`);
+              formikHelpers.setSubmitting(false);
+              return;
+            }
+          }
+
+          if (selectedLogotype) {
+            values.use_custom_logotype = true;
+
+            const formData = new FormData();
+            formData.append("file", selectedLogotype);
+            setSelectedLogotype(null);
+            const response = await fetch(
+              "/api/admin/enterprise-settings/logo?is_logotype=true",
+              {
+                method: "PUT",
+                body: formData,
+              }
+            );
+            if (!response.ok) {
+              const errorMsg = (await response.json()).detail;
+              alert(`Failed to upload logo. ${errorMsg}`);
+              formikHelpers.setSubmitting(false);
+              return;
+            }
+          }
+
+          formikHelpers.setValues(values);
+          await updateEnterpriseSettings(values);
+        }}
+      >
+        {({ isSubmitting, values, setValues }) => (
+          <Form>
+            <TextFormField
+              label="Application Name"
+              name="application_name"
+              subtext={`The custom name you are giving Danswer for your organization. This will replace 'Danswer' everywhere in the UI.`}
+              placeholder="Custom name which will replace 'Danswer'"
+              disabled={isSubmitting}
+            />
+
+            <Label>Custom Logo</Label>
+
+            {values.use_custom_logo ? (
+              <div className="mt-3">
+                <SubLabel>Current Custom Logo: </SubLabel>
+                <img
+                  src={"/api/enterprise-settings/logo?u=" + Date.now()}
+                  alt="logo"
+                  style={{ objectFit: "contain" }}
+                  className="w-32 h-32 mb-10 mt-4"
+                />
+
+                <Button
+                  color="red"
+                  size="xs"
+                  type="button"
+                  className="mb-8"
+                  onClick={async () => {
+                    const valuesWithoutLogo = {
+                      ...values,
+                      use_custom_logo: false,
+                    };
+                    await updateEnterpriseSettings(valuesWithoutLogo);
+                    setValues(valuesWithoutLogo);
+                  }}
+                >
+                  Delete
+                </Button>
+
+                <SubLabel>
+                  Override the current custom logo by uploading a new image
+                  below and clicking the Update button.
+                </SubLabel>
+              </div>
+            ) : (
+              <SubLabel>
+                Specify your own logo to replace the standard Danswer logo.
+              </SubLabel>
+            )}
+
+            <ImageUpload
+              selectedFile={selectedLogo}
+              setSelectedFile={setSelectedLogo}
+            />
+
+            <Divider />
+
+            <AdvancedOptionsToggle
+              showAdvancedOptions={showAdvancedOptions}
+              setShowAdvancedOptions={setShowAdvancedOptions}
+            />
+
+            <br />
+
+            {showAdvancedOptions && (
+              <>
+                <Text>
+                  Read{" "}
+                  <Link
+                    href={"https://docs.danswer.dev/enterprise_edition/theming"}
+                    className="text-link cursor-pointer"
+                  >
+                    the docs
+                  </Link>{" "}
+                  to see whitelabelling examples in action.
+                </Text>
+                <div className="mt-4">
+                  <TextFormField
+                    label="Chat Header Content"
+                    name="custom_header_content"
+                    subtext={`Custom Markdown content that will be displayed as a banner at the top of the Chat page.`}
+                    placeholder="Your header content..."
+                    disabled={isSubmitting}
+                  />
+                </div>
+
+                <Divider />
+
+                <div className="mt-4">
+                  <TextFormField
+                    label="Popup Header"
+                    name="custom_popup_header"
+                    subtext={`The title for the popup that will be displayed for each user on their initial visit 
+        to the application. If left blank AND Custom Popup Content is specified, will use "Welcome to ${
+          values.application_name || "Danswer"
+        }!".`}
+                    placeholder="Initial Popup Header"
+                    disabled={isSubmitting}
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <TextFormField
+                    label="Popup Content"
+                    name="custom_popup_content"
+                    subtext={`Custom Markdown content that will be displayed as a popup on initial visit to the application.`}
+                    placeholder="Your popup content..."
+                    isTextArea
+                    disabled={isSubmitting}
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <TextFormField
+                    label="Chat Footer Text"
+                    name="custom_lower_disclaimer_content"
+                    subtext={`Custom Markdown content that will be displayed at the bottom of the Chat page.`}
+                    placeholder="Your disclaimer content..."
+                    isTextArea
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <Label>Chat Footer Logotype</Label>
+
+                {values.use_custom_logotype ? (
+                  <div className="mt-3">
+                    <SubLabel>Current Custom Logotype: </SubLabel>
+                    <img
+                      src={"/api/enterprise-settings/logotype?u=" + Date.now()}
+                      alt="logotype"
+                      style={{ objectFit: "contain" }}
+                      className="w-32 h-32 mb-10 mt-4"
+                    />
+
+                    <Button
+                      color="red"
+                      size="xs"
+                      type="button"
+                      className="mb-8"
+                      onClick={async () => {
+                        const valuesWithoutLogotype = {
+                          ...values,
+                          use_custom_logotype: false,
+                        };
+                        await updateEnterpriseSettings(valuesWithoutLogotype);
+                        setValues(valuesWithoutLogotype);
+                      }}
+                    >
+                      Delete
+                    </Button>
+
+                    <SubLabel>
+                      Override your uploaded custom logotype by uploading a new
+                      image below and clicking the Update button. This logotype
+                      is the text-based logo that will be rendered at the bottom
+                      right of the chat screen.
+                    </SubLabel>
+                  </div>
+                ) : (
+                  <SubLabel>
+                    Add a custom logotype by uploading a new image below and
+                    clicking the Update button. This logotype is the text-based
+                    logo that will be rendered at the bottom right of the chat
+                    screen.
+                  </SubLabel>
+                )}
+                <ImageUpload
+                  selectedFile={selectedLogotype}
+                  setSelectedFile={setSelectedLogotype}
+                />
+              </>
+            )}
+
+            <Button type="submit" className="mt-4">
+              Update
+            </Button>
+          </Form>
+        )}
+      </Formik>
+    </div>
+  );
+}
