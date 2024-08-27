@@ -12,7 +12,7 @@ import {
   TextFormField,
 } from "@/components/admin/connectors/Field";
 import { Button, Divider, Text } from "@tremor/react";
-import { ImageUpload } from "./ImageUpload";
+import { ImageUpload } from '@/app/ee/admin/whitelabeling/ImageUpload';
 import { AdvancedOptionsToggle } from "@/components/AdvancedOptionsToggle";
 import Link from "next/link";
 
