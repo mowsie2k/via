@@ -3,6 +3,7 @@
 # Set variables
 BACKUP_DIR="/home/ec2-user/backups/letsencrypt"
 
+#
 # List available backups
 echo "Available backups:"
 backups=($(ls -1 "$BACKUP_DIR"/letsencrypt-backup_*.tar.gz))
