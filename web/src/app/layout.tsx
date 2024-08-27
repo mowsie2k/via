@@ -29,15 +29,18 @@ const inter = Inter({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const dynamicSettings = await getCombinedSettings({ forceRetrieval: true });
-  const logoLocation =
-    dynamicSettings.enterpriseSettings &&
-    dynamicSettings.enterpriseSettings?.use_custom_logo
-      ? "/api/enterprise-settings/logo"
-      : "/vv-logo.png";
+  let logoLocation = buildClientUrl("/danswer.ico");
+  let enterpriseSettings: EnterpriseSettings | null = null;
+  if (SERVER_SIDE_ONLY__PAID_ENTERPRISE_FEATURES_ENABLED) {
+    enterpriseSettings = await (await fetchEnterpriseSettingsSS()).json();
+    logoLocation =
+      enterpriseSettings && enterpriseSettings.use_custom_logo
+        ? "/api/enterprise-settings/logo"
+        : buildClientUrl("/danswer.ico");
+  }
 
   return {
-    title: dynamicSettings.enterpriseSettings?.application_name ?? "VIA",
+    title: enterpriseSettings?.application_name ?? "VIA",
     description: "Question answering for your documents",
     icons: {
       icon: logoLocation,
